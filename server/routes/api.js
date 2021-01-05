@@ -2,6 +2,18 @@ const express = require('express')
 const router = express.Router()
 const articles = require('../data/articles.js')
 
+const bcrypt = require('bcrypt')
+const { Client } = require('pg')
+
+const client = new Client({
+ user: 'postgres',
+ host: 'localhost',
+ password: 'azerty',
+ database: 'TP5'
+})
+
+client.connect()
+
 class Panier {
   constructor () {
     this.createdAt = new Date()
@@ -9,6 +21,92 @@ class Panier {
     this.articles = []
   }
 }
+
+router.get('/me', (req,res)=> {
+    if (!req.session.userId) {
+        res.status(401).json({ message: 'Pas connecté' })
+    } 
+    else {
+        res.json(req.session.userId)
+    }
+})
+
+router.post('/login', (req, res) => {
+  const email = req.body.email
+  const password = req.body.password
+
+  login(email, password)
+
+  async function login (email, password){
+    exist(email).then((result)=>{
+      if(result.rowCount != 0){
+        checkPassword(password, result.rows[0].password).then((validHash)=>{
+          if (validHash===true) {
+            if (req.session.userId===result.rows[0].id){
+              res.status(401).json({ message: "Vous êtes déjà connecté"})
+            }
+            else{
+              req.session.userId=result.rows[0].id
+              res.status(200).json({ message: "Vous êtes maintenant connecté"})
+              //res.json(result.rows[0].id)
+            }
+          } else {
+            res.json({ message: "Mot de passe incorrect"})
+          }  
+        })   
+      }
+      else{
+        res.json({message : "L'email n'existe pas"})
+      }
+    });
+  }
+
+  async function exist (email) {
+    var sql = "SELECT * FROM users WHERE email=$1"
+    return await client.query({
+      text: sql,
+      values: [email]
+    })
+  }
+
+  async function checkPassword(password, dbhash){
+    return await bcrypt.compare(password, dbhash)
+  }
+})
+
+router.post('/register', (req, res) => {
+  const email = req.body.email
+  const password = req.body.password
+
+  exist(email).then((result)=>{
+    if(result.rowCount != 0){
+      res.status(400).json({ message: "Votre email est déjà utilisé"})
+    }
+    else{
+      register(email, password).then(()=>{
+        res.status(200).json({message : "Votre compte a bien été enregistré"})
+      })
+    }
+  });
+
+  async function exist (email) {
+    var sql = "SELECT email FROM users WHERE email=$1"
+    return await client.query({
+      text: sql,
+      values: [email]
+    })
+  }
+
+  async function register(email, password){
+    var hash = await bcrypt.hash(password, 10)
+    var sqlInsert="INSERT INTO users (email, password) VALUES ($1, $2)"
+
+    await client.query({
+      text: sqlInsert,
+      values: [email, hash]
+    })
+  }
+})
 
 /**
  * Dans ce fichier, vous trouverez des exemples de requêtes GET, POST, PUT et DELETE
@@ -34,7 +132,7 @@ router.use((req, res, next) => {
  * Cette route doit retourner le panier de l'utilisateur, grâce à req.session
  */
 router.get('/panier', (req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+  res.json(req.session.panier)
 })
 
 /*
@@ -42,7 +140,30 @@ router.get('/panier', (req, res) => {
  * Le body doit contenir l'id de l'article, ainsi que la quantité voulue
  */
 router.post('/panier', (req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+  const id = parseInt(req.body.id)
+  const qte = parseInt(req.body.qte)
+
+  if (qte<=0 || id<=0) {
+    res.status(400).json({ message: "Veuillez choisir un nombre d'article et un id valide (supérieur à 0)" })
+    return
+  }
+
+  if (req.session.panier.articles.some(article => article.id === id)) {
+    res.status(400).json({ message: "L'article existe déjà dans le panier" })
+    return
+  }
+
+  const article = {
+    id: id,
+    qte: qte
+  }
+  req.session.panier.articles.push(article)
+
+  //On renvoi le panier entier
+  //res.json(req.session.panier)
+
+  //On renvoi l'article à l'utilisateur
+  res.json(req.session.panier.articles[req.session.panier.articles.length-1])
 })
 
 /*
@@ -50,7 +171,21 @@ router.post('/panier', (req, res) => {
  * Le panier est ensuite supprimé grâce à req.session.destroy()
  */
 router.post('/panier/pay', (req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+  console.log(req.body.panier.articles)
+  const panier =req.body.panier.articles
+  if (!req.session.userId) {
+    res.json({ connected : false, message: "Vous n'êtes pas connecté" })
+  } 
+  else{
+    if(panier.length<1){
+      res.json({ message: "Aucun article selectionné" })
+    }
+    else {
+      //Elle deconnecte également l'utilisateur car "session" contient l'"userId" qui va être détruite
+      req.session.destroy()
+      res.status(200).json({ connected : true, message : "Merci pour votre achat"})
+    }
+  }
 })
 
 /*
@@ -58,16 +193,39 @@ router.post('/panier/pay', (req, res) => {
  * Le body doit contenir la quantité voulue
  */
 router.put('/panier/:articleId', (req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+  const id = parseInt(req.params.articleId)
+  const qte = parseInt(req.body.qte)
+
+  if (qte<=0) {
+    res.status(400).json({ message: "Veuillez choisir un nombre d'article valide (supérieur à 0)" })
+    return
+  }
+
+  if (!(req.session.panier.articles.some(article => article.id === id))) {
+    res.status(400).json({ message: "L'article n'existe pas dans le panier" })
+    return
+  }
+  
+  req.session.panier.articles.find(article => article.id===id).qte=qte
+  res.send()
 })
 
 /*
  * Cette route doit supprimer un article dans le panier
  */
 router.delete('/panier/:articleId', (req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
-})
+  const id = parseInt(req.params.articleId)
 
+  if (!(req.session.panier.articles.some(article => article.id === id))) {
+    res.status(400).json({ message: "L'article n'existe pas dans le panier" })
+    return
+  }
+
+  let index = req.session.panier.articles.findIndex(a => a.id === id)
+
+  req.session.panier.articles.splice(index,1)
+  res.send()
+})
 
 /**
  * Cette route envoie l'intégralité des articles du site
