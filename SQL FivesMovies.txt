@@ -1,0 +1,91 @@
+--UTILISATEURS
+DROP TABLE IF EXISTS public."Utilisateurs";
+
+CREATE TABLE public."Utilisateurs"
+(
+    "IdUser" integer NOT NULL,
+    "Pseudo" character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    "Email" character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    "Password" character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    "DateArrivee" date NOT NULL,
+    CONSTRAINT "Utilisateurs_pkey" PRIMARY KEY ("IdUser")
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public."Utilisateurs"
+    OWNER to postgres;
+
+--FILMS
+DROP TABLE IF EXISTS public."Films";
+
+CREATE TABLE public."Films"
+(
+    "IdFilm" integer NOT NULL,
+    "NomFilm" character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    "DateSortie" date,
+    "MoyenneFilm" integer,
+    "DescriptionFilm" character varying(250) COLLATE pg_catalog."default",
+    "ImageFilm" bytea,
+    "IdAjout" integer NOT NULL,
+    CONSTRAINT "Films_pkey" PRIMARY KEY ("IdFilm"),
+    CONSTRAINT "IdAjout" FOREIGN KEY ("IdAjout")
+        REFERENCES public."Utilisateurs" ("IdUser") MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public."Films"
+    OWNER to postgres;
+
+--FAVORIS
+DROP TABLE IF EXISTS public."Favoris";
+
+CREATE TABLE public."Favoris"
+(
+    "IdUser" integer NOT NULL,
+    "IdFilm" integer NOT NULL,
+    CONSTRAINT "Favoris_pkey" PRIMARY KEY ("IdUser", "IdFilm"),
+    CONSTRAINT "Favoris_IdFilm_fkey" FOREIGN KEY ("IdFilm")
+        REFERENCES public."Films" ("IdFilm") MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT "Favoris_IdUser_fkey" FOREIGN KEY ("IdUser")
+        REFERENCES public."Utilisateurs" ("IdUser") MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public."Favoris"
+    OWNER to postgres;
+
+--AVIS
+DROP TABLE IF EXISTS public."Avis";
+
+CREATE TABLE public."Avis"
+(
+    "IdUser" integer NOT NULL,
+    "IdFilm" integer NOT NULL,
+    "Note" integer NOT NULL,
+    "Texte" character varying(250) COLLATE pg_catalog."default",
+    "DateAjout" date NOT NULL,
+    CONSTRAINT "Id" PRIMARY KEY ("IdUser", "IdFilm"),
+    CONSTRAINT "IdFilm" FOREIGN KEY ("IdFilm")
+        REFERENCES public."Films" ("IdFilm") MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID,
+    CONSTRAINT "IdUser" FOREIGN KEY ("IdUser")
+        REFERENCES public."Utilisateurs" ("IdUser") MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public."Avis"
+    OWNER to postgres;
