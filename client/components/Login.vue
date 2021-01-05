@@ -5,6 +5,7 @@
             <input type="text" v-model="user.email" placeholder="Email" required>
             <input type="password" v-model="user.password" placeholder="Mot de passe" required>
             <button type="submit">Se connecter</button>
+            {{ session.userId }}
         </form>
         <button><a href="./#/register">Pas encore inscrit ?</a></button>
     </div>

@@ -9,7 +9,7 @@ const client = new Client({
  user: 'postgres',
  host: 'localhost',
  password: 'azerty',
- database: 'TP5'
+ database: 'FivesMovies'
 })
 
 client.connect()
@@ -23,11 +23,11 @@ class Panier {
 }
 
 router.get('/me', (req,res)=> {
-    if (!req.session.userId) {
+    if (!req.session.id_user) {
         res.status(401).json({ message: 'Pas connecté' })
     } 
     else {
-        res.json(req.session.userId)
+        res.json(req.session.id_user)
     }
 })
 
@@ -42,13 +42,16 @@ router.post('/login', (req, res) => {
       if(result.rowCount != 0){
         checkPassword(password, result.rows[0].password).then((validHash)=>{
           if (validHash===true) {
-            if (req.session.userId===result.rows[0].id){
+            if (req.session.id_user===result.rows[0].id_user){
               res.status(401).json({ message: "Vous êtes déjà connecté"})
             }
             else{
-              req.session.userId=result.rows[0].id
+              req.session.id_user=result.rows[0].id_user
+              console.log(req.session.id)
+              console.log(result.rows[0].id_user)
+              req.session.username=result.rows[0].username
               res.status(200).json({ message: "Vous êtes maintenant connecté"})
-              //res.json(result.rows[0].id)
+              //res.json(result.rows[0].idUser)
             }
           } else {
             res.json({ message: "Mot de passe incorrect"})
@@ -75,15 +78,16 @@ router.post('/login', (req, res) => {
 })
 
 router.post('/register', (req, res) => {
+  const username = req.body.nickname
   const email = req.body.email
   const password = req.body.password
-
+  
   exist(email).then((result)=>{
     if(result.rowCount != 0){
       res.status(400).json({ message: "Votre email est déjà utilisé"})
     }
     else{
-      register(email, password).then(()=>{
+      register(username, email, password).then(()=>{
         res.status(200).json({message : "Votre compte a bien été enregistré"})
       })
     }
@@ -97,13 +101,16 @@ router.post('/register', (req, res) => {
     })
   }
 
-  async function register(email, password){
+  async function register(username, email, password){
     var hash = await bcrypt.hash(password, 10)
-    var sqlInsert="INSERT INTO users (email, password) VALUES ($1, $2)"
+    let options={year: 'numeric', month: 'numeric', day: 'numeric' };
+    options.timeZone = 'UTC';
+    var currentDate=new Date().toLocaleString('fr-FR',options)
+    var sqlInsert="INSERT INTO users (username, email, password, register_date) VALUES ($1, $2, $3, $4)"
 
     await client.query({
       text: sqlInsert,
-      values: [email, hash]
+      values: [username, email, hash, currentDate]
     })
   }
 })

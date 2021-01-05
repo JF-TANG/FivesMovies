@@ -44,7 +44,7 @@ var app = new Vue({
       console.log(res.data.message)
     },
     async addUser(user){
-      const res = await axios.post('/api/register', {email : user.email, password : user.password})
+      const res = await axios.post('/api/register', {username: user.username, email : user.email, password : user.password})
       console.log(res.data.message)
     },
     async editQuantity (articleId, qte) {
