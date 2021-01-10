@@ -12,26 +12,35 @@
         <div id="app">
           <header>
             <h1>Fives Movies</h1>
+            <template v-if="current_user.username == null">
             <nav>
               <router-link to='/'>Accueil</router-link>
-              <!--<router-link to='/panier'>Panier</router-link> -->
               <router-link to='/register'>Inscription</router-link>
               <router-link to='/login'>Connexion</router-link>
             </nav>
+          </template>
+          <template v-else>
+            <nav>
+              <router-link to='/'>Accueil</router-link>
+              <div>Vous êtes connecté en tant que {{ current_user.username }}</div>
+            </nav>
+          </template>
           </header>
           <main>
           <router-view
-              :articles="articles"
-              :panier="panier"
+              :current_user="current_user"
+              :recent_movies="recent_movies"
+              :number_movies="number_movies"
+              :search_result="search_result"
               @add-article="addArticle"
               @delete-article="deleteArticle"
               @update-article="updateArticle"
               @add-to-panier="addToPanier"
               @remove-from-panier="removeFromPanier"
               @edit-quantity="editQuantity"
-              @add-user="addUser"
+              @register="register"
               @login="login"
-              @pay="pay"
+              @search_movies="search_movies"
             ></router-view>
           </main>
         </div>

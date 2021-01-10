@@ -1,7 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const articles = require('../data/articles.js')
-
 const bcrypt = require('bcrypt')
 const { Client } = require('pg')
 
@@ -22,14 +20,14 @@ class Panier {
   }
 }
 
-router.get('/me', (req,res)=> {
-    if (!req.session.id_user) {
+/* router.get('/me', (req,res)=> {
+    if (!req.session.current_user.id_user) {
         res.status(401).json({ message: 'Pas connecté' })
     } 
     else {
-        res.json(req.session.id_user)
+        res.json(!req.session.current_user.id_user)
     }
-})
+}) */
 
 router.post('/login', (req, res) => {
   const email = req.body.email
@@ -46,12 +44,13 @@ router.post('/login', (req, res) => {
               res.status(401).json({ message: "Vous êtes déjà connecté"})
             }
             else{
-              req.session.id_user=result.rows[0].id_user
-              console.log(req.session.id)
-              console.log(result.rows[0].id_user)
-              req.session.username=result.rows[0].username
-              res.status(200).json({ message: "Vous êtes maintenant connecté"})
-              //res.json(result.rows[0].idUser)
+              req.session.current_user = {
+                id_user : result.rows[0].id_user,
+                username : result.rows[0].username,
+                email : result.rows[0].email
+              }
+              res.status(200).json(req.session.current_user)
+              //res.status(200).json({ message: "Vous êtes maintenant connecté"})
             }
           } else {
             res.json({ message: "Mot de passe incorrect"})
@@ -78,7 +77,7 @@ router.post('/login', (req, res) => {
 })
 
 router.post('/register', (req, res) => {
-  const username = req.body.nickname
+  const username = req.body.username
   const email = req.body.email
   const password = req.body.password
   
@@ -103,17 +102,72 @@ router.post('/register', (req, res) => {
 
   async function register(username, email, password){
     var hash = await bcrypt.hash(password, 10)
-    let options={year: 'numeric', month: 'numeric', day: 'numeric' };
-    options.timeZone = 'UTC';
-    var currentDate=new Date().toLocaleString('fr-FR',options)
-    var sqlInsert="INSERT INTO users (username, email, password, register_date) VALUES ($1, $2, $3, $4)"
+
+    //let options={year: 'numeric', month: 'numeric', day: 'numeric', hour:'numeric', minute:'numeric', seconde:'numeric', timeZone:'UTC'  };
+    //var currentDate=new Date().toLocaleString('en-US', options)
+
+    var sqlInsert="INSERT INTO users (username, email, password) VALUES ($1, $2, $3)"
 
     await client.query({
       text: sqlInsert,
-      values: [username, email, hash, currentDate]
+      values: [username, email, hash]
     })
   }
 })
+
+router.get('/recent_movies', (req, res) => {
+  get_recent_movies().then((result)=>{
+    /* req.session.recent_movies = {
+      id_movie : result.rows[0].id_movie,
+      title : result.rows[0].title,
+      release_date : result.rows[0].release_date,
+      plot : result.rows[0].plot,
+      poster: result.rows[0].poster,
+      id_user : result.rows[0].id_user
+    }
+    console.log(req.session.recent_movies) */
+    res.status(200).json(result.rows)
+  })
+
+  async function get_recent_movies () {
+    var sql = "select * from movies order by id_movie desc limit 5"
+    return await client.query({
+      text: sql,
+    })
+  }
+})
+
+router.get('/number_movies', (req, res)=>{
+  get_number_movies().then((result)=>{
+    res.status(200).json(result.rows[0].count)
+  })
+
+  async function get_number_movies() {
+    var sql = "select count(*) from movies"
+    return await client.query({
+      text: sql,
+    })
+  }
+})
+
+router.get('/search_movies/:key_words', (req, res)=>{
+  var key_words='%'+req.params.key_words+'%'
+
+  get_search_movies(key_words).then((result)=>{
+    res.status(200).json(result.rows)
+  })
+
+  async function get_search_movies(key_words) {
+    var sql = "select * from movies where title ilike $1"
+    return await client.query({
+      text: sql,
+      values: [key_words]
+    })
+  }
+})
+
+router.post
+
 
 /**
  * Dans ce fichier, vous trouverez des exemples de requêtes GET, POST, PUT et DELETE

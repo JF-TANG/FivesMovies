@@ -1,60 +1,49 @@
 <template>
   <div>
-    <article v-for="movie in movies" :key="movie.idMovie">
-      <div class="article-img">
+    <form @submit.prevent="search_movies">
+        <input type="text" v-model="key_words" placeholder="Recherche" required>
+        <button type="submit">Rechercher</button>
+    </form>
+    Film récemments ajoutés<br>
+    <br>
+    
+    <div v-for="movie in recent_movies" :key="movie.id_movie">
+      <div class="movie-img">
         <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
         </div>
       </div>
-      <div class="article-content" v-if="editingArticle.id !== movie.idMovie">
-        <div class="article-title">
-          <h2>{{ movie.title }} - {{ movie.releaseDate }}€</h2>
-          <div>
-          </div>
-        </div>
-        <p>{{ movie.plot }}</p>
+      <div class="movie-title">
+        <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
       </div>
-      <div class="article-content" v-else>
-        <div class="article-title">
-        </div>
-    </article>
-  </div>
+      <p>{{ movie.plot }}</p>
+    </div>
+    <br>
+    Nombre de films dans la base de données {{number_movies}}
 </template>
 
 <script>
 module.exports = {
   props: {
-    movies:{type: Array, default: []},
-    articles: { type: Array, default: [] },
-    panier: { type: Object }
+    recent_movies: { type: Array },
+    number_movies: { type: Number }
+  },
+  data () {
+    return {
+      key_words:''
+    }
+  },
+  methods: {
+    search_movies () {
+      this.$emit('search_movies', this.key_words)
+    },
   }
 }
 </script>
 
 <style scoped>
-article {
-  display: flex;
-}
-
-.article-img {
-  flex: 1;
-}
-
-.article-img div {
-  width: 100px;
-  height: 100px;
-  background-size: cover;
-}
-
-.article-content {
-  flex: 3;
-}
-
-.article-title {
-  display: flex;
-  justify-content: space-between;
-}
-
-textarea {
-  width: 100%;
+.movie-img div {
+  height:200px;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 </style>
