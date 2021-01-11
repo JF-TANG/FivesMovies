@@ -29,7 +29,9 @@ var app = new Vue({
       username : null,
       email : null,
     },
-    login_error: null,
+    login_error: {
+      message:''
+    },
     movies : [],
     favorites : [],
     reviews : [],
@@ -46,7 +48,6 @@ var app = new Vue({
     this.recent_movies = recent_movies.data
     const number_movies = await axios.get('/api/number_movies')
     this.number_movies = parseInt(number_movies.data)
-
   },
   methods: {
     async disconnect(){
@@ -58,18 +59,20 @@ var app = new Vue({
       this.movies=[]
       this.favorites=[]
       this.reviews=[]
-      window.location.href = "./#/";
+      window.location.href = "./#/"
     },
     async register(user){
       const res = await axios.post('/api/register', {username: user.username, email : user.email, password : user.password})
       console.log(res.data.message)
+      this.login(user)
     },
     async login(user){
       const res = await axios.post('/api/login', {email : user.email, password : user.password})
       if (res.data.message){
         this.login_error=res.data
-      }else{
+      }else if (this.current_user.id_user==null){
         this.current_user=res.data
+        window.location.href = "./#/"
       }
     },
     async search_movies(key_words){
@@ -86,31 +89,36 @@ var app = new Vue({
         this.movies=res.data
       }
     },
-    async editQuantity (articleId, qte) {
-      await axios.put('/api/panier/' + articleId, {qte : qte})
-      const article = this.panier.articles.find(a => a.id === articleId)
-      article.qte = qte
+    async add_movie (new_movie) {
+      const res = await axios.post('/api/add_movie', {
+        title : new_movie.title, 
+        release_date : new_movie.release_date, 
+        plot : new_movie.plot, 
+        poster : new_movie.poster, 
+        id_user : this.current_user.id_user 
+      })
+      if (res.data==1){
+        const movie_clone = Object.assign({}, new_movie);
+        this.movies.unshift(movie_clone)
+      }
     },
-    async removeFromPanier (articleId) {
-      await axios.delete('/api/panier/' + articleId)
-      const index = this.panier.articles.findIndex(a => a.id === articleId)
-      this.panier.articles.splice(index,1)
-    },
-    async addToPanier (articleId) {
-      const res = await axios.post('/api/panier', {id : articleId, qte : 1})
-      this.panier.articles.push(res.data)
-    },
-    async add_movie (movie) {
-      const res = await axios.post('/api/add_movie', {movie : movie, id_user : this.current_user.id_user })
-      this.articles.push(res.data)
-    },
-    async updateArticle (newArticle) {
-      await axios.put('/api/article/' + newArticle.id, newArticle)
-      const article = this.articles.find(a => a.id === newArticle.id)
-      article.name = newArticle.name
-      article.description = newArticle.description
-      article.image = newArticle.image
-      article.price = newArticle.price
+    async send_edited_movie (edited_movie) {
+      var movie_clone=Object.assign({}, edited_movie);
+
+      const res =await axios.put('/api/movie/' + edited_movie.id_movie, {
+        title : edited_movie.title, 
+        release_date : edited_movie.release_date, 
+        plot : edited_movie.plot, 
+        poster : edited_movie.poster, 
+        id_user : this.current_user.id_user 
+      })
+      if (res.data==1){
+        const index = this.movies.findIndex(movie => movie.id_movie === movie_clone.id_movie)
+        this.movies[index].title = movie_clone.title
+        this.movies[index].release_date = movie_clone.release_date
+        this.movies[index].plot = movie_clone.plot
+        this.movies[index].poster = movie_clone.poster
+      }
     },
     async delete_movie (id_movie) {
       const res = await axios.delete('/api/movie/' + id_movie + "/" + this.current_user.id_user)
