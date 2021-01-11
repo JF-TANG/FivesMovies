@@ -79,7 +79,6 @@ var app = new Vue({
     async search_movies(key_words){
       const res = await axios.get('/api/search_movies/' + key_words)
       this.search_result=res.data
-      console.log(search_result)
       window.location.href = "./#/search";
     },
     async get_movie_by_id(movie_id){

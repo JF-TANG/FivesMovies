@@ -38,7 +38,7 @@
           <template v-else>
             <div class="movie-title">
             
-              <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
+            <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
             </div>
             <p>{{ movie.plot }}</p>
             <div>
