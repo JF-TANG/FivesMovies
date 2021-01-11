@@ -36,6 +36,7 @@
               :recent_movies="recent_movies"
               :number_movies="number_movies"
               :search_result="search_result"
+              :movie_result="movie_result"
               :movies="movies"
               :favorites="favorites"
               :reviews="reviews"
@@ -49,7 +50,8 @@
               @edit-quantity="editQuantity"
               @register="register"
               @login="login"
-              @search_movies="search_movies"
+              @get_movie_by_id="get_movie_by_id"
+              @notation="notation"
             ></router-view>
           </main>
         </div>

@@ -5,6 +5,7 @@ const Search = window.httpVueLoader('./components/Search.vue')
 const UserEditMovie = window.httpVueLoader('./components/UserEditMovie.vue')
 const UserFavorite = window.httpVueLoader('./components/UserFavorite.vue')
 const UserReview = window.httpVueLoader('./components/UserReview.vue')
+const Movie = window.httpVueLoader('./components/Movie.vue')
 
 const routes = [
   { path: '/', component: Home },
@@ -14,6 +15,7 @@ const routes = [
   { path: '/user_edit_movie', component: UserEditMovie },
   { path: '/user_favorite', component: UserFavorite },
   { path: '/user_review', component: UserReview },
+  { path: '/movie/:id_movie', component: Movie },
 ]
 
 const router = new VueRouter({
@@ -35,7 +37,8 @@ var app = new Vue({
     reviews : [],
     recent_movies :[],
     number_movies : null,
-    search_result : []
+    search_result : [],
+    movie_result : []
   },
   async mounted () {
     const me = await axios.get('/api/me')
@@ -75,7 +78,12 @@ var app = new Vue({
     async search_movies(key_words){
       const res = await axios.get('/api/search_movies/' + key_words)
       this.search_result=res.data
+      console.log(search_result)
       window.location.href = "./#/search";
+    },
+    async get_movie_by_id(movie_id){
+      const res = await axios.get('/api/get_movie_by_id/' + movie_id)
+      this.movie_result=res.data
     },
     async get_user_movies(){
       if (this.current_user.id_user == null){
@@ -118,6 +126,10 @@ var app = new Vue({
         const index = this.movies.findIndex(movie => movie.id_movie === id_movie)
         this.movies.splice(index, 1)
       }
-    }
+    },
+    async notation(film){
+      const res = await axios.post('/api/notation', {Note : film.Note, Avis : film.Avis
+        , Id_film : film.id_film, id_user : this.current_user.id_user })
+    },
   }
 })
