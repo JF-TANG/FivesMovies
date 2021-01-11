@@ -5,17 +5,17 @@
         <p v-if='movie_result[0] !== undefined'>Date de sortie : {{ movie_result[0].release_date }}</p>
         <p v-if='movie_result[0] !== undefined'>Synopsis : {{ movie_result[0].plot }}</p>
         <p v-if='moyenne[0] !== undefined'>{{ Math.round(moyenne[0].avg) }}☆</p>
-        <form @submit.prevent="noter">
-            <input type="number" v-model="film.Note" id="note" placeholder="Note" required>
-            <input type="text" v-model="film.Avis" id="avis" placeholder="Avis">
-            <button type="submit">Noter ce film</button>
-        </form>
-        
+        <template v-if="current_user.username != null">
+            <form @submit.prevent="noter">
+                <input type="number" v-model="film.Note" id="note" placeholder="Note" required>
+                <input type="text" v-model="film.Avis" id="avis" placeholder="Avis">
+                <button type="submit">Noter ce film</button>
+            </form>
+        </template>
         <div v-if='all_ratings[0] !== undefined'>
             <h2>Avis :</h2>
             <div v-for="avis in all_ratings">
-                <p>pseudo : {{ avis.username }}</p>
-                <p>{{ avis.rating }}☆</p>
+                <p>{{ avis.username }} Note :{{ avis.rating }}☆</p>
                 <p>Commentaire : {{ avis.comment }}</p>
             </div>
         </div>
@@ -30,6 +30,7 @@ module.exports = {
     //console.log(all_ratings)
   },
   props: {
+    current_user:{type:Object},
     movie_result: { type: Array },
     all_ratings: { type: Array },
     moyenne: { type: Array },

@@ -3,7 +3,6 @@ const Register = window.httpVueLoader('./components/Register.vue')
 const Login = window.httpVueLoader('./components/Login.vue')
 const Search = window.httpVueLoader('./components/Search.vue')
 const UserEditMovie = window.httpVueLoader('./components/UserEditMovie.vue')
-const UserFavorite = window.httpVueLoader('./components/UserFavorite.vue')
 const UserReview = window.httpVueLoader('./components/UserReview.vue')
 const Movie = window.httpVueLoader('./components/Movie.vue')
 
@@ -13,7 +12,6 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/search', component: Search },
   { path: '/user_edit_movie', component: UserEditMovie },
-  { path: '/user_favorite', component: UserFavorite },
   { path: '/user_review', component: UserReview },
   { path: '/movie/:id_movie', component: Movie },
 ]
@@ -35,7 +33,6 @@ var app = new Vue({
       message:''
     },
     movies : [],
-    favorites : [],
     reviews : [],
     recent_movies :[],
     number_movies : null,
@@ -62,7 +59,6 @@ var app = new Vue({
       this.current_user.username=null
       this.current_user.email=null
       this.movies=[]
-      this.favorites=[]
       this.reviews=[]
       window.location.href = "./#/"
     },
@@ -92,7 +88,6 @@ var app = new Vue({
     },
     async get_user_movies(){
       if (this.current_user.id_user == null){
-        window.location.href = "./#/login";
       }
       else{
         const res = await axios.get('/api/get_user_movies/' + this.current_user.id_user)
@@ -149,6 +144,26 @@ var app = new Vue({
       const res = await axios.post('/api/get_moyenne', {id_film : id_film})
       this.moyenne=res.data
       return res.data
+    },
+    async get_user_reviews(){
+      if (this.current_user.id_user == null){       
+      }
+      else{
+        const res = await axios.get('/api/get_user_reviews/' + this.current_user.id_user)
+        this.reviews=res.data
+      }
+    },
+    async delete_review (id_movie) {
+      if (this.current_user.id_user == null){ 
+
+      }
+      else{
+        const res = await axios.delete('/api/review/' + id_movie + "/" + this.current_user.id_user)
+        if (res.data==1){
+          const index = this.reviews.findIndex(review => review.id_movie === id_movie)
+          this.reviews.splice(index, 1)
+        }
+      }   
     },
   }
 })

@@ -71,7 +71,6 @@ input[type=text] {
 }
 
 button {
-    color:white;
     border: none;
     cursor: pointer;
     width: 100%;
@@ -80,12 +79,12 @@ button {
 .header {
     padding: 30px;
     text-align: center;
-    color: white;
     font-size: 30px;
 }
 .movie-img div {
   height:200px;
   background-size: contain;
   background-repeat: no-repeat;
+  cursor: pointer;
 }
 </style>

@@ -24,8 +24,7 @@
                 <router-link to='/'>Accueil</router-link>
                 <div>Vous êtes connecté en tant que {{ current_user.username }}</div>
                 <router-link to='/user_edit_movie'>Vos films</router-link>
-                <router-link to='/user_favorite'>Vos avis</router-link>
-                <router-link to='/user_review'>Vos favoris</router-link>
+                <router-link to='/user_review'>Vos avis</router-link>
                 <button @click="disconnect()">Se déconnecter</button>
               </nav>
             </template>
@@ -40,7 +39,6 @@
               :all_ratings="all_ratings"
               :moyenne="moyenne"
               :movies="movies"
-              :favorites="favorites"
               :reviews="reviews"
               :login_error="login_error"
               @get_user_movies="get_user_movies"
@@ -53,9 +51,76 @@
               @notation="notation"
               @get_avis="get_avis"
               @get_moyenne="get_moyenne"
+              @get_user_reviews="get_user_reviews"
+              @delete_review="delete_review"
             ></router-view>
           </main>
         </div>
         <script src="/vue-application.js"></script>
     </body>
 </html>
+<style>
+  body {
+  background: rgb(119, 118, 118);
+  font-family: monospace, serif;
+}
+
+form {
+  border: 2px solid;
+
+}
+
+nav a {
+  font-weight: normal;
+  font-family: serif;
+  text-transform: capitalize;
+}
+
+header h1 {
+  font-family: 'Apple Chancery, cursive';
+  font-size: 70px;
+  text-align: center;
+  font-style: italic;
+  font-weight: bold;
+  color: rgb(243, 138, 0);
+}
+
+input[type=text] {
+  width:15%;
+  display: flex;
+  border: 1px solid;
+}
+
+button {
+  color:black;
+  border: none;
+  cursor: pointer;
+  width: 5%;
+}
+
+.header {
+  padding: 30px;
+  text-align: center;
+  color: white;
+  font-size: 30px;
+}
+
+input[type=text], input[type=password] {
+  width: 15%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.login {
+  width: 380px;
+  overflow: hidden;
+  margin: auto;
+  margin: 20 0 0 450px;
+  padding: 81px;
+  background: #307a6b;
+  border-radius: 16px ;
+}
+</style>

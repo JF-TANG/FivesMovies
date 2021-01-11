@@ -1,7 +1,7 @@
 <template>
   <div>
     <form @submit.prevent="add_movie">
-      <h2>Vous n'avez pas trouvez votre film ?<br>
+      <h2>Vous n'avez pas trouvé votre film ?<br>
       Ajoutez le !
       </h2>
       <input type="text" v-model="new_movie.title" placeholder="Titre du film" required>
@@ -12,7 +12,7 @@
     </form>
 
     <template v-if="movies === undefined || movies == 0">
-        Vous n'avez ajoutez aucun films
+        Vous n'avez ajoutés aucun films
     </template>
 
     <template v-else>

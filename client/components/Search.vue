@@ -46,5 +46,6 @@ module.exports = {
   height:200px;
   background-size: contain;
   background-repeat: no-repeat;
+  cursor: pointer;
 }
 </style>

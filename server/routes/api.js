@@ -6,8 +6,8 @@ const { Client } = require('pg')
 const client = new Client({
   user: 'postgres',
   host: 'localhost',
-  password: 'UltraVerySecretPassword',
-  database: 'Projet_web'
+  password: 'azerty',
+  database: 'FivesMovies'
 })
 
 client.connect()
@@ -254,7 +254,7 @@ router.post('/notation', (req, res) => {
   })
 
   async function exist(idu,idm) {
-    var sql = "SELECT * FROM rewiews WHERE id_user=$1 AND id_movie=$2"
+    var sql = "SELECT * FROM reviews WHERE id_user=$1 AND id_movie=$2"
     return await client.query({
       text: sql,
       values: [idu,idm]
@@ -262,7 +262,7 @@ router.post('/notation', (req, res) => {
   }
 
   async function newReview(idu, idm, note, avis) {
-    var sqlInsert="INSERT INTO rewiews (id_user, id_movie, rating, comment) VALUES ($1, $2, $3, $4)"
+    var sqlInsert="INSERT INTO reviews (id_user, id_movie, rating, comment) VALUES ($1, $2, $3, $4)"
     await client.query({
       text: sqlInsert,
       values: [idu, idm, note, avis]
@@ -270,7 +270,7 @@ router.post('/notation', (req, res) => {
   }
 
 async function updateReview(idu, idm, note, avis){
-  var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
+  var sqlInsert="UPDATE reviews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
   await client.query({
     text: sqlInsert,
     values: [note, avis, idu, idm]
@@ -285,7 +285,7 @@ router.post('/get_avis', (req, res) => {
       })
   
   async function getAvis(idm) {
-    var sql = "SELECT rating, comment, users.username FROM rewiews JOIN users ON rewiews.id_user=users.id_user WHERE rewiews.id_movie=$1"
+    var sql = "SELECT rating, comment, users.username FROM reviews JOIN users ON reviews.id_user=users.id_user WHERE reviews.id_movie=$1"
     return await client.query({
       text: sql,
       values: [idm]
@@ -301,84 +301,13 @@ router.post('/get_moyenne', (req, res) => {
       })
   
   async function getMoyenne(idm) {
-    var sql = "SELECT AVG(rating) FROM rewiews WHERE id_movie=$1"
+    var sql = "SELECT AVG(rating) FROM reviews WHERE id_movie=$1"
     return await client.query({
       text: sql,
       values: [idm]
     })
   }
 
-})
-
-router.post('/panier', (req, res) => {
-  const id = parseInt(req.body.id)
-  const qte = parseInt(req.body.qte)
-
-  if (qte<=0 || id<=0) {
-    res.status(400).json({ message: "Veuillez choisir un nombre d'article et un id valide (supérieur à 0)" })
-    return
-  }
-
-  if (req.session.panier.articles.some(article => article.id === id)) {
-    res.status(400).json({ message: "L'article existe déjà dans le panier" })
-    return
-  }
-
-  const article = {
-    id: id,
-    qte: qte
-  }
-  req.session.panier.articles.push(article)
-
-  //On renvoi le panier entier
-  //res.json(req.session.panier)
-
-  //On renvoi l'article à l'utilisateur
-  res.json(req.session.panier.articles[req.session.panier.articles.length-1])
-})
-
-/*
- * Cette route doit permettre de confirmer un panier, en recevant le nom et prénom de l'utilisateur
- * Le panier est ensuite supprimé grâce à req.session.destroy()
- */
-router.post('/panier/pay', (req, res) => {
-  console.log(req.body.panier.articles)
-  const panier =req.body.panier.articles
-  if (!req.session.userId) {
-    res.json({ connected : false, message: "Vous n'êtes pas connecté" })
-  } 
-  else{
-    if(panier.length<1){
-      res.json({ message: "Aucun article selectionné" })
-    }
-    else {
-      //Elle deconnecte également l'utilisateur car "session" contient l'"userId" qui va être détruite
-      req.session.destroy()
-      res.status(200).json({ connected : true, message : "Merci pour votre achat"})
-    }
-  }
-})
-
-/*
- * Cette route doit permettre de changer la quantité d'un article dans le panier
- * Le body doit contenir la quantité voulue
- */
-router.put('/panier/:articleId', (req, res) => {
-  const id = parseInt(req.params.articleId)
-  const qte = parseInt(req.body.qte)
-
-  if (qte<=0) {
-    res.status(400).json({ message: "Veuillez choisir un nombre d'article valide (supérieur à 0)" })
-    return
-  }
-
-  if (!(req.session.panier.articles.some(article => article.id === id))) {
-    res.status(400).json({ message: "L'article n'existe pas dans le panier" })
-    return
-  }
-  
-  req.session.panier.articles.find(article => article.id===id).qte=qte
-  res.send()
 })
 
 router.delete('/movie/:id_movie/:id_user', (req, res) => {
@@ -443,6 +372,58 @@ router.post('/add_movie', (req, res) => {
     return await client.query({
       text: sql,
       values: [title, release_date, plot, poster, id_user]
+    })
+  } 
+})
+router.get('/get_user_reviews/:id_user', (req, res)=>{
+  var id_user=req.params.id_user
+  
+  if (typeof req.session.current_user !== 'undefined'){
+    if (req.session.current_user.id_user == id_user){
+      get_user_reviews(id_user).then((result)=>{
+        res.status(200).json(result.rows)
+      })
+    }
+    else {
+      res.status(401).json({message : "Vous avez essayé de récuperer des avis d'utilisateurs différent de celui connécté"})
+    }
+  }
+  else{
+    res.status(401).json({message : "Vous n'êtes pas connecté"})
+  }
+
+  async function get_user_reviews(id_user) {
+    var sql = "select r.id_movie, r.rating, r.comment, m.title, m.release_date, m.plot, m.poster from reviews r inner join movies m on r.id_movie=m.id_movie where r.id_user=$1"
+    return await client.query({
+      text: sql,
+      values: [id_user]
+    })
+  }
+})
+
+router.delete('/review/:id_movie/:id_user', (req, res) => {
+  const id_user = req.params.id_user
+  const id_movie = req.params.id_movie
+
+  if (typeof req.session.current_user !== 'undefined'){
+    if (req.session.current_user.id_user == id_user){
+      delete_review(id_movie, id_user).then((result)=>{
+        res.status(200).json(result.rowCount)
+      })
+    }
+    else {
+      res.status(401).json({message : "Vous avez essayé de supprimer un avis d'utilisateur différent de celui connecté"})
+    }
+  }
+  else{
+    res.status(401).json({message : "Vous n'êtes pas connecté"})
+  }
+
+  async function delete_review(id_movie, id_user) {
+    var sql = "delete from reviews where id_movie = $1 and id_user=$2"
+    return await client.query({
+      text: sql,
+      values: [id_movie, id_user]
     })
   }
 })
