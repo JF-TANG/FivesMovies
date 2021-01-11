@@ -14,20 +14,37 @@
     <template v-if="movies === undefined || movies == 0">
         Vous n'avez ajoutez aucun films
     </template>
+
     <template v-else>
         <div v-for="movie in movies" :key="movie.id_movie">
-        <div @click="goToMovie(movie.id_movie)" class="movie-img">
-            <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
-            </div>
-        </div>
-        <div class="movie-title">
-            <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
+          
+          <div class="movie-img" @click="goToMovie(movie.id_movie)">
+              <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
+              </div>
+          </div>
+
+          <template v-if="editing_movie.id_movie == movie.id_movie">
+            <input type="text" v-model="editing_movie.title" placeholder="Titre du film" required> - <input type="number" v-model="editing_movie.release_date" placeholder="Date de sortie" required>
+            
+            <p><textarea type="text" v-model="editing_movie.plot" placeholder="Description" required></textarea></p>
+            <input type="text" v-model="editing_movie.poster" placeholder="Lien vers l'image">
+
             <div>
-              <button @click="delete_movie(movie.id_movie)">Supprimer</button>
-              <button @click="editArticle(movie)">Modifier</button>
+              <button @click="send_edited_movie()">Valider</button>
+              <button @click="cancel_edit_movie()">Annuler</button>
             </div>
-        </div>
-        <p>{{ movie.plot }}</p>
+          </template>
+
+          <template v-else>
+            <div class="movie-title">
+              <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
+            </div>
+            <p>{{ movie.plot }}</p>
+            <div>
+                <button @click="delete_movie(movie.id_movie)">Supprimer</button>
+                <button @click="edit_movie(movie)">Modifier</button>
+            </div>
+          </template>
         </div>
     </template>
   </div>
@@ -50,7 +67,8 @@ module.exports = {
         plot: '',
         poster: ''
       },
-      edit_movie: {
+      editing_movie: {
+        id_movie: 0,
         title: '',
         release_date: '',
         plot: '',
@@ -72,24 +90,23 @@ module.exports = {
     delete_movie (id_movie) {
       this.$emit('delete_movie', id_movie)
     },
-    editArticle (article) {
-      this.editingArticle.id = article.id
-      this.editingArticle.name = article.name
-      this.editingArticle.description = article.description
-      this.editingArticle.image = article.image
-      this.editingArticle.price = article.price
+    edit_movie (movie) {
+      this.editing_movie.id_movie = movie.id_movie
+      this.editing_movie.title = movie.title
+      this.editing_movie.release_date = movie.release_date
+      this.editing_movie.plot = movie.plot
+      this.editing_movie.poster = movie.poster
     },
-    sendEditArticle () {
-      this.$emit('update-article', this.editingArticle)
-      this.abortEditArticle()
+    send_edited_movie () {
+      this.$emit('send_edited_movie', this.editing_movie)
+      this.cancel_edit_movie()
     },
     cancel_edit_movie() {
-      this.edit_movie = {
-        title: '',
-        release_date: '',
-        plot: '',
-        poster: ''
-      }
+      this.editing_movie.id_movie=0
+      this.editing_movie.title= ''
+      this.editing_movie.release_date= ''
+      this.editing_movie.plot= ''
+      this.editing_movie.poster= ''
     }
   }
 }

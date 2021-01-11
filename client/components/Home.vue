@@ -41,6 +41,45 @@ module.exports = {
 </script>
 
 <style scoped>
+body {
+    background: 'url(image/dégradé_gris.jpg)';
+    font-family: monospace, serif;
+}
+
+form {
+    border: 3px solid;
+}
+
+nav a {
+    font-weight: normal;
+    font-family: serif;
+    text-transform: capitalize;
+}
+
+header h1 {
+    font-family: 'ballparkweiner';
+    font-size: 24px;
+}
+
+input[type=text] {
+    width:100%;
+    display: flex;
+    border: 1px solid;
+}
+
+button {
+    color:white;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+.header {
+    padding: 30px;
+    text-align: center;
+    color: white;
+    font-size: 30px;
+}
 .movie-img div {
   height:200px;
   background-size: contain;

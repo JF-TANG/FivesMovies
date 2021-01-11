@@ -6,8 +6,8 @@ const { Client } = require('pg')
 const client = new Client({
   user: 'postgres',
   host: 'localhost',
-  password: 'UltraVerySecretPassword',
-  database: 'Projet_web'
+  password: 'azerty',
+  database: 'FivesMovies'
 })
 
 client.connect()
@@ -109,15 +109,6 @@ router.post('/register', (req, res) => {
 
 router.get('/recent_movies', (req, res) => {
   get_recent_movies().then((result)=>{
-    /* req.session.recent_movies = {
-      id_movie : result.rows[0].id_movie,
-      title : result.rows[0].title,
-      release_date : result.rows[0].release_date,
-      plot : result.rows[0].plot,
-      poster: result.rows[0].poster,
-      id_user : result.rows[0].id_user
-    }
-    console.log(req.session.recent_movies) */
     res.status(200).json(result.rows)
   })
 
@@ -165,7 +156,6 @@ router.get('/get_movie_by_id/:movie_id', (req, res)=>{
   })
 
   async function get_movies(movie_id) {
-    console.log(movie_id)
     var sql = "select * from movies where id_movie = $1"
     return await client.query({
       text: sql,
@@ -173,7 +163,6 @@ router.get('/get_movie_by_id/:movie_id', (req, res)=>{
     })
   }
 })
-
 
 router.get('/get_user_movies/:id_user', (req, res)=>{
   var id_user=req.params.id_user
@@ -193,7 +182,7 @@ router.get('/get_user_movies/:id_user', (req, res)=>{
   }
 
   async function get_user_movies(id_user) {
-    var sql = "select * from movies where id_user=$1"
+    var sql = "select * from movies where id_user=$1 order by id_movie desc"
     return await client.query({
       text: sql,
       values: [id_user]
@@ -206,6 +195,46 @@ router.post('/disconnect', (req, res)=>{
   res.status(200).json({message: "Vous êtes déconnecté"})
 })
 
+router.put('/movie/:id_movie', (req, res) => {
+  const id_movie = req.params.id_movie
+  const title = req.body.title
+  const release_date = parseInt(req.body.release_date)
+  const plot = req.body.plot
+  const poster = req.body.poster
+  const id_user = req.body.id_user
+
+  if (typeof title !== 'string' || title === '' ||
+      typeof release_date !=='number' || release_date <=999 ||
+      typeof plot !== 'string' || plot === '' ||
+      typeof poster !== 'string' || poster === '')
+  {
+    res.status(400).json({ message: 'Des champs sont vides ou incorrects' })
+  }
+  else{
+    if (typeof req.session.current_user !== 'undefined'){
+      if (req.session.current_user.id_user == id_user){
+        edit_movie(title,release_date,plot,poster,id_movie).then((result)=>{
+          res.status(200).json(result.rowCount)
+        })
+      }
+      else {
+        res.status(401).json({message : "Vous avez essayé de modifier un film avec un id d'utilisateur différent de celui connecté"})
+      }
+    }
+    else{
+      res.status(401).json({message : "Vous n'êtes pas connecté"})
+    }
+  }
+
+  async function edit_movie(title,release_date,plot,poster,id_movie) {
+    var sql = "UPDATE movies SET title = $1, release_date = $2, plot = $3, poster = $4 WHERE id_movie=$5"
+    return await client.query({
+      text: sql,
+      values: [title, release_date, plot, poster, id_movie]
+    })
+  }
+})
+    
 router.post('/notation', (req, res) => {
   const avis = req.body.Avis
   const note = req.body.Note
@@ -213,13 +242,11 @@ router.post('/notation', (req, res) => {
   const id_user = req.body.id_user
   exist(id_user,Id_film).then((result)=>{
     if(result.rowCount != 0){
-      //updateReview(id_user,Id_film,note,avis,"1999-01-08").then(()=>{
       updateReview(id_user,Id_film,note,avis).then(()=>{
         res.status(200).json({ message: "Votre avis a bien été modifié"})
       })
     }
     else{
-      //newReview(id_user,Id_film,note,avis,"1999-01-08").then(()=>{
       newReview(id_user,Id_film,note,avis).then(()=>{
         res.status(200).json({message : "Votre avis a bien été enregistré"})
       })
@@ -249,11 +276,19 @@ router.post('/notation', (req, res) => {
     })
   }
 
- /* async function updateReview(idu, idm, note, avis, date){
-    var sqlInsert="UPDATE rewiews SET rating = $1 comment = $2 date_review = $3 WHERE id_user = $4 AND id_movie = $5"
+/*async function updateReview(idu, idm, note, avis, date){
+      var sqlInsert="UPDATE rewiews SET rating = $1 comment = $2 date_review = $3 WHERE id_user = $4 AND id_movie = $5"
+      await client.query({
+        text: sqlInsert,
+        values: [note, avis, date, idu, idm]
+      })
+    }
+  })
+  async function updateReview(idu, idm, note, avis){
+    var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
     await client.query({
       text: sqlInsert,
-      values: [note, avis, date, idu, idm]
+      values: [note, avis, idu, idm]
     })
   }
 })*/
@@ -388,9 +423,6 @@ router.put('/panier/:articleId', (req, res) => {
   res.send()
 })
 
-/*
- * Cette route doit supprimer un article dans le panier
- */
 router.delete('/movie/:id_movie/:id_user', (req, res) => {
   const id_user = req.params.id_user
   const id_movie = req.params.id_movie
@@ -402,7 +434,7 @@ router.delete('/movie/:id_movie/:id_user', (req, res) => {
       })
     }
     else {
-      res.status(401).json({message : "Vous avez essayé de supprimer des films d'utilisateurs différent de celui connécté"})
+      res.status(401).json({message : "Vous avez essayé de supprimer un film d'utilisateur différent de celui connecté"})
     }
   }
   else{
@@ -418,108 +450,42 @@ router.delete('/movie/:id_movie/:id_user', (req, res) => {
   }
 })
 
-/**
- * Cette route envoie l'intégralité des articles du site
- */
-router.get('/articles', (req, res) => {
-  res.json(articles)
+router.post('/add_movie', (req, res) => {
+  const title = req.body.title
+  const release_date = parseInt(req.body.release_date)
+  const plot = req.body.plot
+  const poster = req.body.poster
+  const id_user = req.body.id_user
+  
+  if (typeof title !== 'string' || title === '' ||
+      typeof release_date !=='number' || release_date <=999 ||
+      typeof plot !== 'string' || plot === '' ||
+      typeof poster !== 'string' || poster === '')
+  {
+    res.status(400).json({ message: 'Des champs sont vides ou incorrectes' })
+  }
+  else{
+    if (typeof req.session.current_user !== 'undefined'){
+      if (req.session.current_user.id_user == id_user){
+        add_movie(title,release_date,plot,poster,id_user).then((result)=>{
+          res.status(200).json(result.rowCount)
+        })
+      }
+      else {
+        res.status(401).json({message : "Vous avez essayé d'ajouter un film avec un id d'utilisateur différent de celui connecté"})
+      }
+    }
+    else{
+      res.status(401).json({message : "Vous n'êtes pas connecté"})
+    }
+  }
+  
+  async function add_movie(title,release_date,plot,poster,id_user) {
+    var sql = "INSERT INTO movies (title, release_date, plot, poster, id_user) VALUES ($1, $2, $3, $4, $5);"
+    return await client.query({
+      text: sql,
+      values: [title, release_date, plot, poster, id_user]
+    })
+  }
 })
-
-/**
- * Cette route crée un article.
- * WARNING: dans un vrai site, elle devrait être authentifiée et valider que l'utilisateur est bien autorisé
- * NOTE: lorsqu'on redémarre le serveur, l'article ajouté disparait
- *   Si on voulait persister l'information, on utiliserait une BDD (mysql, etc.)
- */
-router.post('/article', (req, res) => {
-  const name = req.body.name
-  const description = req.body.description
-  const image = req.body.image
-  const price = parseInt(req.body.price)
-
-  // vérification de la validité des données d'entrée
-  if (typeof name !== 'string' || name === '' ||
-      typeof description !== 'string' || description === '' ||
-      typeof image !== 'string' || image === '' ||
-      isNaN(price) || price <= 0) {
-    res.status(400).json({ message: 'bad request' })
-    return
-  }
-
-  const article = {
-    id: articles.length + 1,
-    name: name,
-    description: description,
-    image: image,
-    price: price
-  }
-  articles.push(article)
-  // on envoie l'article ajouté à l'utilisateur
-  res.json(article)
-})
-
-/**
- * Cette fonction fait en sorte de valider que l'article demandé par l'utilisateur
- * est valide. Elle est appliquée aux routes:
- * - GET /article/:articleId
- * - PUT /article/:articleId
- * - DELETE /article/:articleId
- * Comme ces trois routes ont un comportement similaire, on regroupe leurs fonctionnalités communes dans un middleware
- */
-function parseArticle (req, res, next) {
-  const articleId = parseInt(req.params.articleId)
-
-  // si articleId n'est pas un nombre (NaN = Not A Number), alors on s'arrête
-  if (isNaN(articleId)) {
-    res.status(400).json({ message: 'articleId should be a number' })
-    return
-  }
-  // on affecte req.articleId pour l'exploiter dans toutes les routes qui en ont besoin
-  req.articleId = articleId
-
-  const article = articles.find(a => a.id === req.articleId)
-  if (!article) {
-    res.status(404).json({ message: 'article ' + articleId + ' does not exist' })
-    return
-  }
-  // on affecte req.article pour l'exploiter dans toutes les routes qui en ont besoin
-  req.article = article
-  next()
-}
-
-router.route('/article/:articleId')
-  /**
-   * Cette route envoie un article particulier
-   */
-  .get(parseArticle, (req, res) => {
-    // req.article existe grâce au middleware parseArticle
-    res.json(req.article)
-  })
-
-  /**
-   * Cette route modifie un article.
-   * WARNING: dans un vrai site, elle devrait être authentifiée et valider que l'utilisateur est bien autorisé
-   * NOTE: lorsqu'on redémarre le serveur, la modification de l'article disparait
-   *   Si on voulait persister l'information, on utiliserait une BDD (mysql, etc.)
-   */
-  .put(parseArticle, (req, res) => {
-    const name = req.body.name
-    const description = req.body.description
-    const image = req.body.image
-    const price = parseInt(req.body.price)
-
-    req.article.name = name
-    req.article.description = description
-    req.article.image = image
-    req.article.price = price
-    res.send()
-  })
-
-  .delete(parseArticle, (req, res) => {
-    const index = articles.findIndex(a => a.id === req.articleId)
-
-    articles.splice(index, 1) // remove the article from the array
-    res.send()
-  })
-
 module.exports = router
