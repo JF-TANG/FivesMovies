@@ -37,6 +37,7 @@
 
           <template v-else>
             <div class="movie-title">
+            
               <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
             </div>
             <p>{{ movie.plot }}</p>
@@ -57,7 +58,7 @@ module.exports = {
   },
   props: {
     current_user: { type: Object },
-    movies:{type : Array}
+    movies:{type : Array},
   },
   data () {
     return {
@@ -107,7 +108,7 @@ module.exports = {
       this.editing_movie.release_date= ''
       this.editing_movie.plot= ''
       this.editing_movie.poster= ''
-    }
+    },
   }
 }
 </script>

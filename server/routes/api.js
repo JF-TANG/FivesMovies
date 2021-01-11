@@ -6,8 +6,8 @@ const { Client } = require('pg')
 const client = new Client({
   user: 'postgres',
   host: 'localhost',
-  password: 'azerty',
-  database: 'FivesMovies'
+  password: 'UltraVerySecretPassword',
+  database: 'Projet_web'
 })
 
 client.connect()
@@ -261,13 +261,6 @@ router.post('/notation', (req, res) => {
     })
   }
 
-  /*async function newReview(idu, idm, note, avis, date) {
-    var sqlInsert="INSERT INTO rewiews (id_user, id_movie, rating, comment, date_review) VALUES ($1, $2, $3, $4, $5)"
-    await client.query({
-      text: sqlInsert,
-      values: [idu, idm, note, avis, date]
-    })
-  }*/
   async function newReview(idu, idm, note, avis) {
     var sqlInsert="INSERT INTO rewiews (id_user, id_movie, rating, comment) VALUES ($1, $2, $3, $4)"
     await client.query({
@@ -276,22 +269,6 @@ router.post('/notation', (req, res) => {
     })
   }
 
-/*async function updateReview(idu, idm, note, avis, date){
-      var sqlInsert="UPDATE rewiews SET rating = $1 comment = $2 date_review = $3 WHERE id_user = $4 AND id_movie = $5"
-      await client.query({
-        text: sqlInsert,
-        values: [note, avis, date, idu, idm]
-      })
-    }
-  })
-  async function updateReview(idu, idm, note, avis){
-    var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
-    await client.query({
-      text: sqlInsert,
-      values: [note, avis, idu, idm]
-    })
-  }
-})*/
 async function updateReview(idu, idm, note, avis){
   var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
   await client.query({
@@ -301,23 +278,13 @@ async function updateReview(idu, idm, note, avis){
 }
 })
 
-
-
-
-
-
-
-
-
 router.post('/get_avis', (req, res) => {
   const Id_film = req.body.id_film
   getAvis(Id_film).then((result)=>{
-        console.log('nb de lignes : ' + result.rowCount)
         res.status(200).json(result.rows)
       })
   
   async function getAvis(idm) {
-    console.log('idm ----->' + idm)
     var sql = "SELECT rating, comment, users.username FROM rewiews JOIN users ON rewiews.id_user=users.id_user WHERE rewiews.id_movie=$1"
     return await client.query({
       text: sql,
@@ -326,31 +293,22 @@ router.post('/get_avis', (req, res) => {
   }
 
 })
-/*
+
 router.post('/get_moyenne', (req, res) => {
-  const Id_film = req.body.id_film
-  getMoyenne(Id_film).then((result)=>{
+  const id_film = req.body.id_film
+  getMoyenne(id_film).then((result)=>{
         res.status(200).json(result.rows)
       })
   
-  async function getUsername(idu) {
-    console.log('idu ----->' + idu)
-    var sql = "SELECT username FROM users WHERE id_user=$1"
+  async function getMoyenne(idm) {
+    var sql = "SELECT AVG(rating) FROM rewiews WHERE id_movie=$1"
     return await client.query({
       text: sql,
-      values: [idu]
+      values: [idm]
     })
   }
 
-})*/
-
-
-
-
-
-
-
-
+})
 
 router.post('/panier', (req, res) => {
   const id = parseInt(req.body.id)

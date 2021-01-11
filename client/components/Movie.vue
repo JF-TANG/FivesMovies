@@ -4,7 +4,7 @@
         <img v-if='movie_result[0] !== undefined' v-bind:src="movie_result[0].poster"> 
         <p v-if='movie_result[0] !== undefined'>Date de sortie : {{ movie_result[0].release_date }}</p>
         <p v-if='movie_result[0] !== undefined'>Synopsis : {{ movie_result[0].plot }}</p>
-        <p>{{ Moyenne }}☆</p>
+        <p v-if='moyenne[0] !== undefined'>{{ Math.round(moyenne[0].avg) }}☆</p>
         <form @submit.prevent="noter">
             <input type="number" v-model="film.Note" id="note" placeholder="Note" required>
             <input type="text" v-model="film.Avis" id="avis" placeholder="Avis">
@@ -15,8 +15,8 @@
             <h2>Avis :<h2>
             <div v-for="avis in all_ratings" :key=""><!-- v-for="avis in all_ratings"-->
                 <p>pseudo : {{ avis.username }}</p>
-                <p>{{ avis.rating }} etoiles</p>
-                <p>{{ avis.comment }}</p>
+                <p>{{ avis.rating }}☆</p>
+                <p>Commentaire : {{ avis.comment }}</p>
             </div>
         </div>
     </div>
@@ -31,7 +31,8 @@ module.exports = {
   },
   props: {
     movie_result: { type: Array },
-    all_ratings: { type: Array }
+    all_ratings: { type: Array },
+    moyenne: { type: Array },
   },
   data () {
     return {
