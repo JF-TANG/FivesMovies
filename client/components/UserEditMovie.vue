@@ -16,7 +16,7 @@
     </template>
 
     <template v-else>
-        <div v-for="movie in movies" :key="movie.id_movie">
+        <div v-for="movie in movies" :key="movie.id_movie" @click="goToMovie(movie.id_movie)">
           
           <div class="movie-img">
               <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
@@ -32,6 +32,9 @@
             <div>
               <button @click="send_edited_movie()">Valider</button>
               <button @click="cancel_edit_movie()">Annuler</button>
+        <div v-for="movie in movies" :key="movie.id_movie" @click="goToMovie(movie.id_movie)">
+        <div class="movie-img">
+            <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
             </div>
           </template>
 
@@ -51,7 +54,6 @@
 </template>
 
 <script>
-
 module.exports = {
   mounted:function(){
     this.$emit('get_user_movies')
@@ -78,6 +80,13 @@ module.exports = {
     }
   },
   methods: {
+    url (x) {
+      return "./#/movie?id_film=" + x
+      //onclick="this.href=url(movie.id_movie);"
+    },
+    goToMovie(id_movie) {
+      router.push('/movie/'+id_movie).catch(() => {})
+    },
     add_movie () {
       this.$emit('add_movie', this.new_movie)
     },

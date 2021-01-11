@@ -4,10 +4,10 @@ const bcrypt = require('bcrypt')
 const { Client } = require('pg')
 
 const client = new Client({
- user: 'postgres',
- host: 'localhost',
- password: 'azerty',
- database: 'FivesMovies'
+  user: 'postgres',
+  host: 'localhost',
+  password: 'UltraVerySecretPassword',
+  database: 'Projet_web'
 })
 
 client.connect()
@@ -158,6 +158,23 @@ router.get('/search_movies/:key_words', (req, res)=>{
   }
 })
 
+router.get('/get_movie_by_id/:movie_id', (req, res)=>{
+  var movie_id=req.params.movie_id
+  get_movies(movie_id).then((result)=>{
+    res.status(200).json(result.rows)
+  })
+
+  async function get_movies(movie_id) {
+    console.log(movie_id)
+    var sql = "select * from movies where id_movie = $1"
+    return await client.query({
+      text: sql,
+      values: [movie_id]
+    })
+  }
+})
+
+
 router.get('/get_user_movies/:id_user', (req, res)=>{
   var id_user=req.params.id_user
   
@@ -203,6 +220,84 @@ router.put('/movie/:id_movie', (req, res) => {
       typeof poster !== 'string' || poster === '')
   {
     res.status(400).json({ message: 'Des champs sont vides ou incorrectes' })
+    
+router.post('/notation', (req, res) => {
+  const avis = req.body.Avis
+  const note = req.body.Note
+  const Id_film = req.body.Id_film
+  const id_user = req.body.id_user
+  exist(id_user,Id_film).then((result)=>{
+    if(result.rowCount != 0){
+      //updateReview(id_user,Id_film,note,avis,"1999-01-08").then(()=>{
+      updateReview(id_user,Id_film,note,avis).then(()=>{
+        res.status(200).json({ message: "Votre avis a bien été modifié"})
+      })
+    }
+    else{
+      //newReview(id_user,Id_film,note,avis,"1999-01-08").then(()=>{
+      newReview(id_user,Id_film,note,avis).then(()=>{
+        res.status(200).json({message : "Votre avis a bien été enregistré"})
+      })
+    }
+  })
+
+  async function exist(idu,idm) {
+    var sql = "SELECT * FROM rewiews WHERE id_user=$1 AND id_movie=$2"
+    return await client.query({
+      text: sql,
+      values: [idu,idm]
+    })
+  }
+
+  /*async function newReview(idu, idm, note, avis, date) {
+    var sqlInsert="INSERT INTO rewiews (id_user, id_movie, rating, comment, date_review) VALUES ($1, $2, $3, $4, $5)"
+    await client.query({
+      text: sqlInsert,
+      values: [idu, idm, note, avis, date]
+    })
+  }*/
+  async function newReview(idu, idm, note, avis) {
+    var sqlInsert="INSERT INTO rewiews (id_user, id_movie, rating, comment) VALUES ($1, $2, $3, $4)"
+    await client.query({
+      text: sqlInsert,
+      values: [idu, idm, note, avis]
+    })
+  }
+
+ /* async function updateReview(idu, idm, note, avis, date){
+    var sqlInsert="UPDATE rewiews SET rating = $1 comment = $2 date_review = $3 WHERE id_user = $4 AND id_movie = $5"
+    await client.query({
+      text: sqlInsert,
+      values: [note, avis, date, idu, idm]
+    })
+  }
+})*/
+async function updateReview(idu, idm, note, avis){
+  var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
+  await client.query({
+    text: sqlInsert,
+    values: [note, avis, idu, idm]
+  })
+}
+})
+
+router.post('/panier', (req, res) => {
+  const id = parseInt(req.body.id)
+  const qte = parseInt(req.body.qte)
+
+  if (qte<=0 || id<=0) {
+    res.status(400).json({ message: "Veuillez choisir un nombre d'article et un id valide (supérieur à 0)" })
+    return
+  }
+
+  if (req.session.panier.articles.some(article => article.id === id)) {
+    res.status(400).json({ message: "L'article existe déjà dans le panier" })
+    return
+  }
+
+  const article = {
+    id: id,
+    qte: qte
   }
   else{
     if (typeof req.session.current_user !== 'undefined'){
