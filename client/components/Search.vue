@@ -26,7 +26,7 @@
 <script>
 module.exports = {
   props: {
-    search_result: { type: Array }
+  search_result: { type: Array }
   },
   data () {
     return {

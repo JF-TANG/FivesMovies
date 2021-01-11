@@ -13,18 +13,22 @@
           <header>
             <h1>Fives Movies</h1>
             <template v-if="current_user.username == null">
-            <nav>
-              <router-link to='/'>Accueil</router-link>
-              <router-link to='/register'>Inscription</router-link>
-              <router-link to='/login'>Connexion</router-link>
-            </nav>
-          </template>
-          <template v-else>
-            <nav>
-              <router-link to='/'>Accueil</router-link>
-              <div>Vous êtes connecté en tant que {{ current_user.username }}</div>
-            </nav>
-          </template>
+              <nav>
+                <router-link to='/'>Accueil</router-link>
+                <router-link to='/register'>Inscription</router-link>
+                <router-link to='/login'>Connexion</router-link>
+              </nav>
+            </template>
+            <template v-else>
+              <nav>
+                <router-link to='/'>Accueil</router-link>
+                <div>Vous êtes connecté en tant que {{ current_user.id_user }}</div>
+                <router-link to='/user_edit_movie'>Vos films</router-link>
+                <router-link to='/user_favorite'>Vos avis</router-link>
+                <router-link to='/user_review'>Vos favoris</router-link>
+                <button @click="disconnect()">Se déconnecter</button>
+              </nav>
+            </template>
           </header>
           <main>
           <router-view
@@ -32,8 +36,13 @@
               :recent_movies="recent_movies"
               :number_movies="number_movies"
               :search_result="search_result"
-              @add-article="addArticle"
-              @delete-article="deleteArticle"
+              :movies="movies"
+              :favorites="favorites"
+              :reviews="reviews"
+              :login_error="login_error"
+              @get_user_movies="get_user_movies"
+              @add_movie="add_movie"
+              @delete_movie="delete_movie"
               @update-article="updateArticle"
               @add-to-panier="addToPanier"
               @remove-from-panier="removeFromPanier"

@@ -12,22 +12,14 @@ const client = new Client({
 
 client.connect()
 
-class Panier {
-  constructor () {
-    this.createdAt = new Date()
-    this.updatedAt = new Date()
-    this.articles = []
-  }
-}
-
-/* router.get('/me', (req,res)=> {
-    if (!req.session.current_user.id_user) {
-        res.status(401).json({ message: 'Pas connecté' })
-    } 
-    else {
-        res.json(!req.session.current_user.id_user)
+router.get('/me', (req,res)=> {
+    if (typeof req.session.current_user === 'undefined') {
+        res.status(200).json({ message: 'Pas connecté' })
     }
-}) */
+    else {
+        res.status(200).json(req.session.current_user)
+    }
+}) 
 
 router.post('/login', (req, res) => {
   const email = req.body.email
@@ -166,40 +158,37 @@ router.get('/search_movies/:key_words', (req, res)=>{
   }
 })
 
-router.post
-
-
-/**
- * Dans ce fichier, vous trouverez des exemples de requêtes GET, POST, PUT et DELETE
- * Ces requêtes concernent l'ajout ou la suppression d'articles sur le site
- * Votre objectif est, en apprenant des exemples de ce fichier, de créer l'API pour le panier de l'utilisateur
- *
- * Notre site ne contient pas d'authentification, ce qui n'est pas DU TOUT recommandé.
- * De même, les informations sont réinitialisées à chaque redémarrage du serveur, car nous n'avons pas de système de base de données pour faire persister les données
- */
-
-/**
- * Notre mécanisme de sauvegarde des paniers des utilisateurs sera de simplement leur attribuer un panier grâce à req.session, sans authentification particulière
- */
-router.use((req, res, next) => {
-  // l'utilisateur n'est pas reconnu, lui attribuer un panier dans req.session
-  if (typeof req.session.panier === 'undefined') {
-    req.session.panier = new Panier()
+router.get('/get_user_movies/:id_user', (req, res)=>{
+  var id_user=req.params.id_user
+  
+  if (typeof req.session.current_user !== 'undefined'){
+    if (req.session.current_user.id_user == id_user){
+      get_user_movies(id_user).then((result)=>{
+        res.status(200).json(result.rows)
+      })
+    }
+    else {
+      res.status(401).json({message : "Vous avez essayé de récuperer des films d'utilisateurs différent de celui connécté"})
+    }
   }
-  next()
+  else{
+    res.status(401).json({message : "Vous n'êtes pas connecté"})
+  }
+
+  async function get_user_movies(id_user) {
+    var sql = "select * from movies where id_user=$1"
+    return await client.query({
+      text: sql,
+      values: [id_user]
+    })
+  }
 })
 
-/*
- * Cette route doit retourner le panier de l'utilisateur, grâce à req.session
- */
-router.get('/panier', (req, res) => {
-  res.json(req.session.panier)
+router.post('/disconnect', (req, res)=>{
+  req.session.destroy()
+  res.status(200).json({message: "Vous êtes déconnecté"})
 })
 
-/*
- * Cette route doit ajouter un article au panier, puis retourner le panier modifié à l'utilisateur
- * Le body doit contenir l'id de l'article, ainsi que la quantité voulue
- */
 router.post('/panier', (req, res) => {
   const id = parseInt(req.body.id)
   const qte = parseInt(req.body.qte)
@@ -274,18 +263,31 @@ router.put('/panier/:articleId', (req, res) => {
 /*
  * Cette route doit supprimer un article dans le panier
  */
-router.delete('/panier/:articleId', (req, res) => {
-  const id = parseInt(req.params.articleId)
+router.delete('/movie/:id_movie/:id_user', (req, res) => {
+  const id_user = req.params.id_user
+  const id_movie = req.params.id_movie
 
-  if (!(req.session.panier.articles.some(article => article.id === id))) {
-    res.status(400).json({ message: "L'article n'existe pas dans le panier" })
-    return
+  if (typeof req.session.current_user !== 'undefined'){
+    if (req.session.current_user.id_user == id_user){
+      delete_movie(id_movie).then((result)=>{
+        res.status(200).json(result.rowCount)
+      })
+    }
+    else {
+      res.status(401).json({message : "Vous avez essayé de supprimer des films d'utilisateurs différent de celui connécté"})
+    }
+  }
+  else{
+    res.status(401).json({message : "Vous n'êtes pas connecté"})
   }
 
-  let index = req.session.panier.articles.findIndex(a => a.id === id)
-
-  req.session.panier.articles.splice(index,1)
-  res.send()
+  async function delete_movie(id_movie) {
+    var sql = "delete from movies where id_movie = $1"
+    return await client.query({
+      text: sql,
+      values: [id_movie]
+    })
+  }
 })
 
 /**

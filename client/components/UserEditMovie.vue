@@ -1,72 +1,70 @@
 <template>
   <div>
-    <article v-for="article in articles" :key="article.id">
-      <div class="article-img">
-        <div :style="{ backgroundImage: 'url(' + article.image + ')' }">
-        </div>
-      </div>
-      <div class="article-content" v-if="editingArticle.id !== article.id">
-        <div class="article-title">
-          <h2>{{ article.name }} - {{ article.price }}€</h2>
-          <div>
-          <button @click="deleteArticle(article.id)">Supprimer</button>
-          <button @click="editArticle(article)">Modifier</button>
-          </div>
-        </div>
-        <p>{{ article.description }}</p>
-      </div>
-      <div class="article-content" v-else>
-        <div class="article-title">
-          <h2><input type="text" v-model="editingArticle.name"> - <input type="number" v-model="editingArticle.price"></h2>
-          <div>
-            <button @click="sendEditArticle()">Valider</button>
-            <button @click="abortEditArticle()">Annuler</button>
-          </div>
-        </div>
-        <p><textarea v-model="editingArticle.description"></textarea></p>
-        <input type="text" v-model="editingArticle.image" placeholder="Lien vers l'image">
-      </div>
-    </article>
-    <form @submit.prevent="addArticle">
-      <h2>Nouveau produit à ajouter</h2>
-      <input type="text" v-model="newArticle.name" placeholder="Nom du produit" required>
-      <input type="number" v-model="newArticle.price" placeholder="Prix" required>
-      <textarea type="text" v-model="newArticle.description" required></textarea>
-      <input type="text" v-model="newArticle.image" placeholder="Lien vers l'image">
+    <form @submit.prevent="add_movie">
+      <h2>Vous n'avez pas trouvez votre film ?<br>
+      Ajoutez le !
+      </h2>
+      <input type="text" v-model="new_movie.title" placeholder="Titre du film" required>
+      <input type="number" v-model="new_movie.release_date" placeholder="Date de sortie" required>
+      <textarea type="text" v-model="new_movie.plot" placeholder="Description" required></textarea>
+      <input type="text" v-model="new_movie.poster" placeholder="Lien vers l'image">
       <button type="submit">Ajouter</button>
     </form>
+
+    <template v-if="movies === undefined || movies == 0">
+        Vous n'avez ajoutez aucun films
+    </template>
+    <template v-else>
+        <div v-for="movie in movies" :key="movie.id_movie">
+        <div class="movie-img">
+            <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
+            </div>
+        </div>
+        <div class="movie-title">
+            <h2>{{ movie.title }} - {{ movie.release_date }}</h2>
+            <div>
+              <button @click="delete_movie(movie.id_movie)">Supprimer</button>
+              <button @click="editArticle(movie)">Modifier</button>
+            </div>
+        </div>
+        <p>{{ movie.plot }}</p>
+        </div>
+    </template>
   </div>
 </template>
 
 <script>
+
 module.exports = {
+  mounted:function(){
+    this.$emit('get_user_movies')
+  },
   props: {
-    articles: { type: Array, default: [] },
-    panier: { type: Object }
+    current_user: { type: Object },
+    movies:{type : Array}
   },
   data () {
     return {
-      newArticle: {
-        name: '',
-        description: '',
-        image: '',
-        price: 0
+      new_movie: {
+        title: '',
+        release_date: '',
+        plot: '',
+        poster: ''
       },
-      editingArticle: {
-        id: -1,
-        name: '',
-        description: '',
-        image: '',
-        price: 0
+      edit_movie: {
+        title: '',
+        release_date: '',
+        plot: '',
+        poster: ''
       }
     }
   },
   methods: {
-    addArticle () {
-      this.$emit('add-article', this.newArticle)
+    add_movie () {
+      this.$emit('add_movie', this.new_movie)
     },
-    deleteArticle (articleId) {
-      this.$emit('delete-article', articleId)
+    delete_movie (id_movie) {
+      this.$emit('delete_movie', id_movie)
     },
     editArticle (article) {
       this.editingArticle.id = article.id
@@ -79,13 +77,12 @@ module.exports = {
       this.$emit('update-article', this.editingArticle)
       this.abortEditArticle()
     },
-    abortEditArticle () {
-      this.editingArticle = {
-        id: -1,
-        name: '',
-        description: '',
-        image: '',
-        price: 0
+    cancel_edit_movie() {
+      this.edit_movie = {
+        title: '',
+        release_date: '',
+        plot: '',
+        poster: ''
       }
     }
   }
@@ -93,30 +90,9 @@ module.exports = {
 </script>
 
 <style scoped>
-article {
-  display: flex;
-}
-
-.article-img {
-  flex: 1;
-}
-
-.article-img div {
-  width: 100px;
-  height: 100px;
-  background-size: cover;
-}
-
-.article-content {
-  flex: 3;
-}
-
-.article-title {
-  display: flex;
-  justify-content: space-between;
-}
-
-textarea {
-  width: 100%;
+.movie-img div {
+  height:200px;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 </style>

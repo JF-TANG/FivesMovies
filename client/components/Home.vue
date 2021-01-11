@@ -18,7 +18,7 @@
       <p>{{ movie.plot }}</p>
     </div>
     <br>
-    Nombre de films dans la base de données {{number_movies}}
+    Nombre de films dans la base de données : {{number_movies}}
 </template>
 
 <script>

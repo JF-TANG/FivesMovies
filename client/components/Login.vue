@@ -18,7 +18,8 @@
 <script>
 module.exports = {
   props: {
-    current_user:{ type: Object }
+    current_user:{ type: Object },
+    login_error:{type : Object}
   },
   data () {
     return {
