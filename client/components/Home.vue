@@ -8,7 +8,7 @@
     <br>
     
     <div v-for="movie in recent_movies" :key="movie.id_movie">
-      <div class="movie-img">
+      <div class="movie-img" @click="goToMovie(movie.id_movie)">
         <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
         </div>
       </div>
@@ -33,6 +33,9 @@ module.exports = {
     }
   },
   methods: {
+    goToMovie(id_movie) {
+      router.push('/movie/'+id_movie).catch(() => {})
+    },
     search_movies () {
       this.$emit('search_movies', this.key_words)
     },

@@ -12,8 +12,8 @@
         </form>
         
         <div v-if='all_ratings[0] !== undefined'>
-            <h2>Avis :<h2>
-            <div v-for="avis in all_ratings" :key=""><!-- v-for="avis in all_ratings"-->
+            <h2>Avis :</h2>
+            <div v-for="avis in all_ratings">
                 <p>pseudo : {{ avis.username }}</p>
                 <p>{{ avis.rating }}☆</p>
                 <p>Commentaire : {{ avis.comment }}</p>
