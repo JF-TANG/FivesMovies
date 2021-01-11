@@ -266,6 +266,57 @@ async function updateReview(idu, idm, note, avis){
 }
 })
 
+
+
+
+
+
+
+
+
+router.post('/get_avis', (req, res) => {
+  const Id_film = req.body.id_film
+  getAvis(Id_film).then((result)=>{
+        console.log('nb de lignes : ' + result.rowCount)
+        res.status(200).json(result.rows)
+      })
+  
+  async function getAvis(idm) {
+    console.log('idm ----->' + idm)
+    var sql = "SELECT rating, comment, users.username FROM rewiews JOIN users ON rewiews.id_user=users.id_user WHERE rewiews.id_movie=$1"
+    return await client.query({
+      text: sql,
+      values: [idm]
+    })
+  }
+
+})
+/*
+router.post('/get_moyenne', (req, res) => {
+  const Id_film = req.body.id_film
+  getMoyenne(Id_film).then((result)=>{
+        res.status(200).json(result.rows)
+      })
+  
+  async function getUsername(idu) {
+    console.log('idu ----->' + idu)
+    var sql = "SELECT username FROM users WHERE id_user=$1"
+    return await client.query({
+      text: sql,
+      values: [idu]
+    })
+  }
+
+})*/
+
+
+
+
+
+
+
+
+
 router.post('/panier', (req, res) => {
   const id = parseInt(req.body.id)
   const qte = parseInt(req.body.qte)

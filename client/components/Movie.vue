@@ -10,19 +10,32 @@
             <input type="text" v-model="film.Avis" id="avis" placeholder="Avis">
             <button type="submit">Noter ce film</button>
         </form>
+        
+        <div v-if='all_ratings[0] !== undefined'>
+            <h2>Avis :<h2>
+            <div v-for="avis in all_ratings" :key=""><!-- v-for="avis in all_ratings"-->
+                <p>pseudo : {{ avis.username }}</p>
+                <p>{{ avis.rating }} etoiles</p>
+                <p>{{ avis.comment }}</p>
+            </div>
+        </div>
     </div>
 </template>
 <script>
 module.exports = {
     mounted:function(){
-    movie_result = this.$emit('get_movie_by_id', [router.app._route.params.id_movie][0])
+    this.$emit('get_movie_by_id', [router.app._route.params.id_movie][0])
+    this.$emit('get_avis',[router.app._route.params.id_movie][0])
+    this.$emit('get_moyenne',[router.app._route.params.id_movie][0])
+    //console.log(all_ratings)
   },
   props: {
-    movie_result: { type: Array }
+    movie_result: { type: Array },
+    all_ratings: { type: Array }
   },
   data () {
     return {
-        test: "",
+        Liste_avis: [],
         Moyenne: '',
         film: {
             Nom_film: '',
@@ -52,7 +65,11 @@ module.exports = {
             Avis: this.film.Avis,
           }
           this.$emit('notation', data)
-      }
+      },/*
+      getUsername(id) {
+          var id_user = id
+          return [this.$emit('get_username', id_user)][0].username
+      }*/
   }
 }
 

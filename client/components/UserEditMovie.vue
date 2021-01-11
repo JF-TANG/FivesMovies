@@ -15,8 +15,8 @@
         Vous n'avez ajoutez aucun films
     </template>
     <template v-else>
-        <div v-for="movie in movies" :key="movie.id_movie" @click="goToMovie(movie.id_movie)">
-        <div class="movie-img">
+        <div v-for="movie in movies" :key="movie.id_movie">
+        <div @click="goToMovie(movie.id_movie)" class="movie-img">
             <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
             </div>
         </div>

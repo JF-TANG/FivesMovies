@@ -38,7 +38,8 @@ var app = new Vue({
     recent_movies :[],
     number_movies : null,
     search_result : [],
-    movie_result : []
+    movie_result : [],
+    all_ratings: []
   },
   async mounted () {
     const me = await axios.get('/api/me')
@@ -130,6 +131,16 @@ var app = new Vue({
     async notation(film){
       const res = await axios.post('/api/notation', {Note : film.Note, Avis : film.Avis
         , Id_film : film.id_film, id_user : this.current_user.id_user })
+    },
+    async get_avis(id_film){
+      const res = await axios.post('/api/get_avis', {id_film : id_film})
+      this.all_ratings=res.data
+      console.log(res.data)
+    },
+    async get_moyenne(id_film){
+      const res = await axios.post('/api/get_moyenne', {id_film : id_film})
+      //console.log(res.data)
+      return res.data
     },
   }
 })
