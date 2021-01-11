@@ -6,8 +6,8 @@ const { Client } = require('pg')
 const client = new Client({
   user: 'postgres',
   host: 'localhost',
-  password: 'UltraVerySecretPassword',
-  database: 'Projet_web'
+  password: 'azerty',
+  database: 'FivesMovies'
 })
 
 client.connect()
@@ -109,15 +109,6 @@ router.post('/register', (req, res) => {
 
 router.get('/recent_movies', (req, res) => {
   get_recent_movies().then((result)=>{
-    /* req.session.recent_movies = {
-      id_movie : result.rows[0].id_movie,
-      title : result.rows[0].title,
-      release_date : result.rows[0].release_date,
-      plot : result.rows[0].plot,
-      poster: result.rows[0].poster,
-      id_user : result.rows[0].id_user
-    }
-    console.log(req.session.recent_movies) */
     res.status(200).json(result.rows)
   })
 
@@ -165,7 +156,6 @@ router.get('/get_movie_by_id/:movie_id', (req, res)=>{
   })
 
   async function get_movies(movie_id) {
-    console.log(movie_id)
     var sql = "select * from movies where id_movie = $1"
     return await client.query({
       text: sql,
@@ -173,7 +163,6 @@ router.get('/get_movie_by_id/:movie_id', (req, res)=>{
     })
   }
 })
-
 
 router.get('/get_user_movies/:id_user', (req, res)=>{
   var id_user=req.params.id_user
@@ -219,7 +208,32 @@ router.put('/movie/:id_movie', (req, res) => {
       typeof plot !== 'string' || plot === '' ||
       typeof poster !== 'string' || poster === '')
   {
-    res.status(400).json({ message: 'Des champs sont vides ou incorrectes' })
+    res.status(400).json({ message: 'Des champs sont vides ou incorrects' })
+  }
+  else{
+    if (typeof req.session.current_user !== 'undefined'){
+      if (req.session.current_user.id_user == id_user){
+        edit_movie(title,release_date,plot,poster,id_movie).then((result)=>{
+          res.status(200).json(result.rowCount)
+        })
+      }
+      else {
+        res.status(401).json({message : "Vous avez essayé de modifier un film avec un id d'utilisateur différent de celui connecté"})
+      }
+    }
+    else{
+      res.status(401).json({message : "Vous n'êtes pas connecté"})
+    }
+  }
+
+  async function edit_movie(title,release_date,plot,poster,id_movie) {
+    var sql = "UPDATE movies SET title = $1, release_date = $2, plot = $3, poster = $4 WHERE id_movie=$5"
+    return await client.query({
+      text: sql,
+      values: [title, release_date, plot, poster, id_movie]
+    })
+  }
+})
     
 router.post('/notation', (req, res) => {
   const avis = req.body.Avis
@@ -228,13 +242,11 @@ router.post('/notation', (req, res) => {
   const id_user = req.body.id_user
   exist(id_user,Id_film).then((result)=>{
     if(result.rowCount != 0){
-      //updateReview(id_user,Id_film,note,avis,"1999-01-08").then(()=>{
       updateReview(id_user,Id_film,note,avis).then(()=>{
         res.status(200).json({ message: "Votre avis a bien été modifié"})
       })
     }
     else{
-      //newReview(id_user,Id_film,note,avis,"1999-01-08").then(()=>{
       newReview(id_user,Id_film,note,avis).then(()=>{
         res.status(200).json({message : "Votre avis a bien été enregistré"})
       })
@@ -264,64 +276,19 @@ router.post('/notation', (req, res) => {
     })
   }
 
- /* async function updateReview(idu, idm, note, avis, date){
-    var sqlInsert="UPDATE rewiews SET rating = $1 comment = $2 date_review = $3 WHERE id_user = $4 AND id_movie = $5"
+/*async function updateReview(idu, idm, note, avis, date){
+      var sqlInsert="UPDATE rewiews SET rating = $1 comment = $2 date_review = $3 WHERE id_user = $4 AND id_movie = $5"
+      await client.query({
+        text: sqlInsert,
+        values: [note, avis, date, idu, idm]
+      })
+    }
+  })*/
+  async function updateReview(idu, idm, note, avis){
+    var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
     await client.query({
       text: sqlInsert,
-      values: [note, avis, date, idu, idm]
-    })
-  }
-})*/
-async function updateReview(idu, idm, note, avis){
-  var sqlInsert="UPDATE rewiews SET rating = $1, comment = $2 WHERE id_user = $3 AND id_movie = $4"
-  await client.query({
-    text: sqlInsert,
-    values: [note, avis, idu, idm]
-  })
-}
-})
-
-router.post('/panier', (req, res) => {
-  const id = parseInt(req.body.id)
-  const qte = parseInt(req.body.qte)
-
-  if (qte<=0 || id<=0) {
-    res.status(400).json({ message: "Veuillez choisir un nombre d'article et un id valide (supérieur à 0)" })
-    return
-  }
-
-  if (req.session.panier.articles.some(article => article.id === id)) {
-    res.status(400).json({ message: "L'article existe déjà dans le panier" })
-    return
-  }
-
-  const article = {
-    id: id,
-    qte: qte
-  }
-  else{
-    if (typeof req.session.current_user !== 'undefined'){
-      if (req.session.current_user.id_user == id_user){
-        edit_movie(title,release_date,plot,poster,id_movie).then((result)=>{
-          res.status(200).json(result.rowCount)
-        })
-      }
-      else {
-        console.log(req.session.current_user.id_user)
-        console.log(id_user)
-        res.status(401).json({message : "Vous avez essayé de modifier un film avec un id d'utilisateur différent de celui connecté"})
-      }
-    }
-    else{
-      res.status(401).json({message : "Vous n'êtes pas connecté"})
-    }
-  }
-
-  async function edit_movie(title,release_date,plot,poster,id_movie) {
-    var sql = "UPDATE movies SET title = $1, release_date = $2, plot = $3, poster = $4 WHERE id_movie=$5"
-    return await client.query({
-      text: sql,
-      values: [title, release_date, plot, poster, id_movie]
+      values: [note, avis, idu, idm]
     })
   }
 })
@@ -382,13 +349,6 @@ router.post('/add_movie', (req, res) => {
       res.status(401).json({message : "Vous n'êtes pas connecté"})
     }
   }
-/*const movie = {
-    title: title,
-    release_date: release_date,
-    plot: plot,
-    poster: poster,
-    id_user: id_user
-  } */
   
   async function add_movie(title,release_date,plot,poster,id_user) {
     var sql = "INSERT INTO movies (title, release_date, plot, poster, id_user) VALUES ($1, $2, $3, $4, $5);"
@@ -398,5 +358,4 @@ router.post('/add_movie', (req, res) => {
     })
   }
 })
-
 module.exports = router

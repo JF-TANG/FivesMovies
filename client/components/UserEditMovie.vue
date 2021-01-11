@@ -16,9 +16,9 @@
     </template>
 
     <template v-else>
-        <div v-for="movie in movies" :key="movie.id_movie" @click="goToMovie(movie.id_movie)">
+        <div v-for="movie in movies" :key="movie.id_movie">
           
-          <div class="movie-img">
+          <div class="movie-img" @click="goToMovie(movie.id_movie)">
               <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
               </div>
           </div>
@@ -32,9 +32,6 @@
             <div>
               <button @click="send_edited_movie()">Valider</button>
               <button @click="cancel_edit_movie()">Annuler</button>
-        <div v-for="movie in movies" :key="movie.id_movie" @click="goToMovie(movie.id_movie)">
-        <div class="movie-img">
-            <div :style="{ backgroundImage: 'url(' + movie.poster + ')' }">
             </div>
           </template>
 
